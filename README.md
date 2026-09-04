@@ -26,16 +26,6 @@
 
 The goal is to build the system from the ground up and eventually run custom applications and a graphics renderer directly on the OS.
 
-## Current Progress
-
-- UEFI bootloader
-- x86_64 architecture
-- GNU-EFI toolchain
-- Dockerized build environment
-- CMake build system
-- FAT32 bootable disk image
-- QEMU + OVMF testing
-- VS Code Dev Container
 
 ## Tech Stack
 
@@ -45,8 +35,6 @@ The goal is to build the system from the ground up and eventually run custom app
 **Systems & Tools:**  
 `UEFI` · `CMake` · `Docker` · `QEMU` · `OVMF`
 
-**Development:**  
-`VS Code` · `Dev Containers`
 
 ## Build & Run
 
