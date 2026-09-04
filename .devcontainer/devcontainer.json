@@ -1,0 +1,30 @@
+{
+    "name": "SyndromeOS Development",
+
+    "build": {
+        "dockerfile": "../buildenv/Dockerfile",
+        "context": ".."
+    },
+
+    "workspaceFolder": "/workspaces/SyndromeOS",
+
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/SyndromeOS,type=bind,consistency=cached",
+
+    "overrideCommand": true,
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools"
+            ],
+            "settings": {
+                "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+                "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+                "C_Cpp.default.cStandard": "c11"
+            }
+        }
+    },
+
+    "remoteUser": "root"
+}
