@@ -1,0 +1,13 @@
+{
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+    "C_Cpp.default.intelliSenseMode": "linux-gcc-x64",
+    "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "/usr/local/include/efi",
+        "/usr/local/include/efi/x86_64"
+    ],
+    "C_Cpp.default.defines": [
+        "EFI_FUNCTION_WRAPPER"
+    ]
+}

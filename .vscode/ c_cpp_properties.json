@@ -1,0 +1,31 @@
+{
+    "configurations": [
+        {
+            "name": "SyndromeOS",
+            "compilerPath": "/usr/bin/gcc",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "c11",
+
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/include/efi",
+                "/usr/local/include/efi/x86_64"
+            ],
+
+            "defines": [
+                "EFI_FUNCTION_WRAPPER"
+            ],
+
+            "compilerArgs": [
+                "-fpic",
+                "-ffreestanding",
+                "-fno-stack-protector",
+                "-fno-stack-check",
+                "-fshort-wchar",
+                "-mno-red-zone",
+                "-mcmodel=small"
+            ]
+        }
+    ],
+    "version": 4
+}
