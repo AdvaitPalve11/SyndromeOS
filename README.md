@@ -5,14 +5,24 @@
 <h1 align="center">SyndromeOS</h1>
 
 <p align="center">
-  A 64-bit x86_64 operating system built from scratch.
+  <i>A 64-bit x86_64 operating system built from scratch.</i>
+</p>
+
+<p align="center">
+  <code>C</code> · <code>C++</code> · <code>Assembly</code> · <code>Rust</code> · <code>UEFI</code> · <code>CMake</code> · <code>QEMU</code>
+</p>
+
+<br>
+
+<p align="center">
+  <b>Low-level systems. Computer architecture. Graphics.</b>
 </p>
 
 ---
 
 ## About
 
-**SyndromeOS** is a personal OS development project focused on low-level systems programming, UEFI boot, kernel development, memory management, graphics, and computer architecture.
+**SyndromeOS** is a personal operating system development project focused on low-level systems programming, UEFI boot, kernel development, memory management, graphics, and computer architecture.
 
 The goal is to build the system from the ground up and eventually run custom applications and a graphics renderer directly on the OS.
 
@@ -29,7 +39,14 @@ The goal is to build the system from the ground up and eventually run custom app
 
 ## Tech Stack
 
-`C` · `C++` · `Assembly` · `Rust` · `CMake` · `Docker` · `QEMU` · `UEFI`
+**Languages:**  
+`C` · `C++` · `Assembly` · `Rust`
+
+**Systems & Tools:**  
+`UEFI` · `CMake` · `Docker` · `QEMU` · `OVMF`
+
+**Development:**  
+`VS Code` · `Dev Containers`
 
 ## Build & Run
 
