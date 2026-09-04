@@ -76,12 +76,14 @@ find_library(GNUEFI_LIBRARY
 # UEFI Bootloader
 # ------------------------------------------------------------
 
-set(BOOT_SOURCE
+set(BOOT_SOURCES
     ${CMAKE_SOURCE_DIR}/boot/uefi/main.c
+    ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.c
 )
 
-set(BOOT_OBJECT
+set(BOOT_OBJECTS
     ${CMAKE_BINARY_DIR}/main.o
+    ${CMAKE_BINARY_DIR}/graphics.o
 )
 
 set(BOOT_ELF
@@ -97,7 +99,7 @@ set(BOOT_EFI
 # ------------------------------------------------------------
 
 add_custom_command(
-    OUTPUT ${BOOT_OBJECT}
+    OUTPUT ${CMAKE_BINARY_DIR}/main.o
 
     COMMAND ${CMAKE_C_COMPILER}
         -I${EFI_INCLUDE_DIR}
@@ -110,12 +112,39 @@ add_custom_command(
         -fshort-wchar
         -mno-red-zone
         -mcmodel=small
-        -c ${BOOT_SOURCE}
-        -o ${BOOT_OBJECT}
+        -c ${CMAKE_SOURCE_DIR}/boot/uefi/main.c
+        -o ${CMAKE_BINARY_DIR}/main.o
 
-    DEPENDS ${BOOT_SOURCE}
+    DEPENDS
+        ${CMAKE_SOURCE_DIR}/boot/uefi/main.c
+        ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.h
 
     COMMENT "Compiling UEFI bootloader"
+)
+
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/graphics.o
+
+    COMMAND ${CMAKE_C_COMPILER}
+        -I${EFI_INCLUDE_DIR}
+        -I${EFI_ARCH_INCLUDE_DIR}
+        -DEFI_FUNCTION_WRAPPER
+        -fpic
+        -ffreestanding
+        -fno-stack-protector
+        -fno-stack-check
+        -fshort-wchar
+        -mno-red-zone
+        -mcmodel=small
+        -c ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.c
+        -o ${CMAKE_BINARY_DIR}/graphics.o
+
+    DEPENDS
+        ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.c
+        ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.h
+        ${CMAKE_SOURCE_DIR}/boot/graphics/logo.h
+
+    COMMENT "Compiling graphics renderer"
 )
 
 # ------------------------------------------------------------
@@ -133,12 +162,12 @@ add_custom_command(
         -Bsymbolic
         -L/usr/local/lib
         ${EFI_CRT}
-        ${BOOT_OBJECT}
+        ${BOOT_OBJECTS}
         -lgnuefi
         -lefi
         -o ${BOOT_ELF}
 
-    DEPENDS ${BOOT_OBJECT}
+    DEPENDS ${BOOT_OBJECTS}
 
     COMMENT "Linking UEFI bootloader"
 )
