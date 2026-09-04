@@ -2,10 +2,7 @@
 #include <efilib.h>
 #include "../graphics/graphics.h"
 
-EFI_STATUS EFIAPI efi_main(
-    EFI_HANDLE ImageHandle,
-    EFI_SYSTEM_TABLE *SystemTable
-) {
+EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *SystemTable) {
     InitializeLib(ImageHandle, SystemTable);
     GraphicsDrawLogo(SystemTable);
 
@@ -15,10 +12,7 @@ EFI_STATUS EFIAPI efi_main(
     Print(L"\r\n");
     Print(L"Press any key to exit...\r\n");
 
-    WaitForSingleEvent(
-        SystemTable->ConIn->WaitForKey,
-        0
-    );
+    WaitForSingleEvent( SystemTable->ConIn->WaitForKey, 0 );
 
     return EFI_SUCCESS;
 }
