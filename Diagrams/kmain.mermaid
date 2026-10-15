@@ -1,0 +1,13 @@
+flowchart TD
+    Start(["kernel_main(const BootInfo* boot_info)"]) --> ReadFB["Read Framebuffer Struct<br/>base, width, height, pitch"]
+    
+    ReadFB --> ClearScreen["Step 1: Clear Background<br/>Iterate y=0..height, x=0..width<br/>Set pixel = 0x001E293B (Dark Slate Gray)"]
+    
+    ClearScreen --> CalcCenter["Step 2: Center Canvas Calculation<br/>doom_w = 320, doom_h = 200<br/>start_x = (width - 320) / 2<br/>start_y = (height - 200) / 2"]
+    
+    CalcCenter --> DrawBox["Step 3: fill_rect(fb, start_x, start_y, 320, 200, 0x00B91C1C)<br/>Draw centered Crimson Red Box"]
+    
+    DrawBox --> HltLoop["Step 4: Infinite Halt Loop<br/>while (true) { asm volatile('hlt'); }"]
+    
+    HltLoop --> WaitInterrupt["Wait for next CPU Interrupt / Event"]
+    WaitInterrupt --> HltLoop

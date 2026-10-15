@@ -1,0 +1,13 @@
+classDiagram
+    direction LR
+    class BootInfo {
+        +Framebuffer fb
+    }
+    class Framebuffer {
+        +uint32_t* base
+        +uint64_t size
+        +uint32_t width
+        +uint32_t height
+        +uint32_t pitch
+    }
+    BootInfo *-- Framebuffer : contains

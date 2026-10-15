@@ -1,0 +1,22 @@
+flowchart TD
+    subgraph CCall["Kernel Code (e.g. PIT Driver)"]
+        CallOut["outb(port, value)"]
+        CallIn["inb(port)"]
+        Wait["io_wait()"]
+    end
+
+    subgraph Assembly["Inline Assembly Translation"]
+        OutAsm["__asm__ volatile('outb %0, %1' : : 'a'(val), 'Nd'(port))"]
+        InAsm["__asm__ volatile('inb %1, %0' : '=a'(ret) : 'Nd'(port))"]
+        WaitAsm["outb(0x80, 0) -> Waste bus cycles on POST port"]
+    end
+
+    subgraph CPU["x86_64 CPU Execution"]
+        AL_REG["AL register <- 8-bit data"]
+        DX_REG["DX register <- 16-bit port"]
+        IO_BUS["x86 I/O Bus Transaction"]
+    end
+
+    CallOut --> OutAsm --> AL_REG & DX_REG --> IO_BUS
+    CallIn --> InAsm --> DX_REG --> IO_BUS
+    Wait --> WaitAsm --> IO_BUS

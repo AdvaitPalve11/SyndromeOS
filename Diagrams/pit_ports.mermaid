@@ -1,0 +1,17 @@
+graph LR
+    subgraph Ports["PIT Port Layout (pit.h)"]
+        P40["0x40 : Channel 0 Data (IRQ0)"]
+        P41["0x41 : Channel 1 Data (RAM Refresh)"]
+        P42["0x42 : Channel 2 Data (PC Speaker / Polling)"]
+        P43["0x43 : Command Register"]
+    end
+
+    subgraph Methods["Public Functions"]
+        F1["pit_init(frequency)"]
+        F2["pit_sleep_ms(milliseconds)"]
+    end
+
+    F1 --> P43
+    F1 --> P40
+    F2 --> P43
+    F2 --> P42

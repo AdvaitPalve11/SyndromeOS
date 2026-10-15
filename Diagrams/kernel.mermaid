@@ -1,0 +1,36 @@
+graph TD
+    subgraph Bootloader["UEFI Boot Environment"]
+        Entry["src/boot/uefi/entry.cpp"]
+        GOP["UEFI Graphics Output Protocol (GOP)"]
+    end
+
+    subgraph KernelHandoff["Hardware Abstraction Contract"]
+        BI["bootinfo.h<br/>BootInfo & Framebuffer"]
+    end
+
+    subgraph KernelSpace["SyndromeOS Kernel Space"]
+        KMain["kmain.cpp<br/>kernel_main()"]
+        PITImpl["pit.cpp<br/>pit_init() & pit_sleep_ms()"]
+        PITHeader["pit.h<br/>Port & Frequency Constants"]
+        IO["io.h<br/>Inline Assembly Port I/O"]
+    end
+
+    subgraph Hardware["Bare-Metal x86_64 Hardware"]
+        FB_HW["Linear Video Framebuffer (VRAM)"]
+        CPU_PORTS["CPU I/O Bus (IN / OUT Instructions)"]
+        PIT_HW["Intel 8254 Timer & Port 0x61 Speaker Control"]
+        CPU_STATE["CPU State (HLT Loop)"]
+    end
+
+    GOP -->|Populates| BI
+    Entry -->|Passes BootInfo*| KMain
+    BI -.->|Defines screen layout for| KMain
+
+    KMain -->|Pixel writes base[y*pitch + x]| FB_HW
+    KMain -->|asm hlt| CPU_STATE
+
+    PITHeader -.->|Declarations| PITImpl
+    IO -->|inb / outb / io_wait| PITImpl
+
+    PITImpl -->|Channel 0 & 2 Port Access| CPU_PORTS
+    CPU_PORTS -->|Controls| PIT_HW

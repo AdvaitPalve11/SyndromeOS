@@ -1,0 +1,21 @@
+sequenceDiagram
+    autonumber
+    participant Kernel as kmain / Caller
+    participant PIT as pit.cpp
+    participant Ports as CPU Ports (0x43, 0x42, 0x61)
+    participant Timer as 8254 Timer HW
+
+    Kernel->>PIT: pit_sleep_ms(ms)
+    loop For each millisecond (i = 0 .. ms)
+        PIT->>Ports: outb(0x43, 0xB0) [Channel 2, Mode 0]
+        PIT->>Ports: outb(0x42, 1193 & 0xFF) [Low byte]
+        PIT->>Ports: outb(0x42, (1193 >> 8) & 0xFF) [High byte]
+        PIT->>Ports: Toggle Port 0x61 (Gate bit 0: Clear then Set)
+        Timer->>Timer: Counts down 1193 ticks at 1.193 MHz
+        loop While bit 5 of 0x61 == 0
+            PIT->>Ports: inb(0x61)
+            PIT->>PIT: CPU 'pause'
+        end
+        Timer-->>Ports: Terminal count reached (Bit 5 becomes 1)
+    end
+    PIT-->>Kernel: Delay complete

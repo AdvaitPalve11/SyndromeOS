@@ -1,0 +1,15 @@
+flowchart TD
+    subgraph BootInfoHandoff["BootInfo Handoff"]
+        FB["Framebuffer Struct<br/>base: uint32_t*<br/>width: uint32_t<br/>height: uint32_t<br/>pitch: uint32_t<br/>size: uint64_t"]
+    end
+
+    subgraph MemoryMapping["Linear Framebuffer Addressing (VRAM)"]
+        direction TB
+        Row0["Row 0: [Pixel (0,0)] ... [Pixel (width-1, 0)] [Padding: pitch - width]"]
+        Row1["Row 1: [Pixel (0,1)] ... [Pixel (width-1, 1)] [Padding: pitch - width]"]
+        RowY["Row y: [Pixel (0,y)] ... [Pixel (x,y)] ... [Pixel (width-1, y)]"]
+        Formula["Address Formula:<br/>base + (y * pitch + x) * sizeof(uint32_t)"]
+    end
+
+    FB --> MemoryMapping
+    RowY --> Formula
