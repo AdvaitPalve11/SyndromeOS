@@ -1,4 +1,5 @@
 #include "bootinfo.h"
+#include "graphics/color.h"
 
 // Set a single pixel in the 32-bit linear framebuffer (0x00RRGGBB)
 static inline void put_pixel(const Framebuffer& fb, uint32_t x, uint32_t y, uint32_t color) {
@@ -21,10 +22,10 @@ extern "C" void kernel_main(const BootInfo* boot_info){
     // discover where the physical screen pixels are located in RAM.
     const Framebuffer& fb = boot_info->fb;
 
-    // Clear the entire display(0x001E293B)
+    // Clear the entire display
     for (uint32_t y = 0; y < fb.height; ++y) {
         for (uint32_t x = 0; x < fb.width; ++x) {
-            fb.base[y * fb.pitch + x] = 0x001E293B;
+            fb.base[y * fb.pitch + x] = Color::SolBase03;
         }
     }
 
