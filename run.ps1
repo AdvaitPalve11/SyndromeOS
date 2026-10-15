@@ -38,44 +38,47 @@ function Write-Info {
     Write-Host "$Message" -ForegroundColor Gray
 }
 
+function Write-Warn {
+    param([string]$Message)
+    Write-Host "  [!] " -ForegroundColor Yellow -NoNewline
+    Write-Host "$Message" -ForegroundColor Yellow
+}
+
 Clear-Host
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host "                  SyndromeOS Pipeline                      " -ForegroundColor White
 Write-Host "             64-bit Bare-Metal x86_64 OS                   " -ForegroundColor DarkGray
 Write-Host "==========================================================" -ForegroundColor Cyan
 
-# Locate QEMU and OVMF firmware
-Write-Step "1/4" "Detecting virtualization tools (QEMU & OVMF)..."
+# Locate QEMU virtualization tool
+Write-Step "1/4" "Detecting virtualization tools (QEMU)..."
 
 $QemuCandidates = @(
-    "C:\msys64\ucrt64\bin\qemu-system-x86_64.exe",
+    (Get-Command "qemu-system-x86_64.exe" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source),
     "C:\Program Files\qemu\qemu-system-x86_64.exe",
-    (Get-Command "qemu-system-x86_64.exe" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source)
+    "C:\msys64\ucrt64\bin\qemu-system-x86_64.exe",
+    "C:\msys64\mingw64\bin\qemu-system-x86_64.exe",
+    (Join-Path $env:USERPROFILE "scoop\apps\qemu\current\qemu-system-x86_64.exe"),
+    (Join-Path $env:USERPROFILE "scoop\shims\qemu-system-x86_64.exe"),
+    "C:\ProgramData\chocolatey\bin\qemu-system-x86_64.exe"
 )
 
 $QemuPath = $QemuCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 
 if (-not $QemuPath) {
-    throw "QEMU not found. Please ensure qemu-system-x86_64 is installed or in PATH."
+    Write-Host ""
+    Write-Host "[ERROR] QEMU executable (qemu-system-x86_64.exe) was not found." -ForegroundColor Red
+    Write-Host "Please install QEMU via one of the following commands:" -ForegroundColor Yellow
+    Write-Host "  winget install SoftwareFreedomConservancy.QEMU" -ForegroundColor Cyan
+    Write-Host "  choco install qemu" -ForegroundColor Cyan
+    Write-Host "  scoop install qemu" -ForegroundColor Cyan
+    throw "QEMU not installed."
 }
 Write-Success "QEMU: $QemuPath"
 
-$OvmfCandidates = @(
-    "C:\msys64\ucrt64\share\qemu\edk2-x86_64-code.fd",
-    "C:\msys64\share\qemu\edk2-x86_64-code.fd",
-    "C:\Program Files\qemu\share\edk2-x86_64-code.fd",
-    (Join-Path $WorkspaceRoot "build\ovmf.fd")
-)
-
-$OvmfPath = $OvmfCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
-
-if (-not $OvmfPath) {
-    throw "OVMF UEFI firmware not found. Please ensure edk2-x86_64-code.fd is installed."
-}
-Write-Success "OVMF: $OvmfPath"
-
 $DiskImage = Join-Path $WorkspaceRoot "build\syndrome.img"
 $EfiBinary = Join-Path $WorkspaceRoot "build\SyndromeOS.efi"
+$BuildDir  = Join-Path $WorkspaceRoot "build"
 
 if ($SkipBuild) {
     if (-not (Test-Path $DiskImage)) {
@@ -106,9 +109,10 @@ if ($SkipBuild) {
         Write-Info "Docker daemon not running. Attempting to start Docker Desktop..."
         $DockerDesktopCandidates = @(
             (Join-Path $env:LOCALAPPDATA "Programs\DockerDesktop\Docker Desktop.exe"),
-            "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+            "C:\Program Files\Docker\Docker\Docker Desktop.exe",
+            (Join-Path $env:ProgramFiles "Docker\Docker\Docker Desktop.exe")
         )
-        $DockerExe = $DockerDesktopCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+        $DockerExe = $DockerDesktopCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
 
         if ($DockerExe) {
             Start-Process -FilePath $DockerExe
@@ -128,7 +132,10 @@ if ($SkipBuild) {
         }
 
         if (-not $DockerRunning) {
-            throw "Failed to connect to Docker engine. Please ensure Docker Desktop is started."
+            Write-Host ""
+            Write-Host "[ERROR] Docker engine is not running or not installed." -ForegroundColor Red
+            Write-Host "Please start Docker Desktop or install it from: https://www.docker.com/products/docker-desktop" -ForegroundColor Yellow
+            throw "Docker engine not available."
         }
     }
     Write-Success "Docker engine is ready."
@@ -153,18 +160,57 @@ if ($SkipBuild) {
     }
     Write-Success "SyndromeOS.efi built successfully."
 
-    # Create FAT32 disk image and copy bootloader
-    Write-Info "Formatting FAT32 disk image and copying /EFI/BOOT/BOOTX64.EFI..."
+    # Create FAT32 disk image and copy bootloader + extract firmware
+    Write-Info "Formatting FAT32 disk image and provisioning EFI boot structure..."
     docker run --rm `
         -v "${WorkspaceRoot}:/src" `
         syndromeos-build `
-        bash -c "dd if=/dev/zero of=/src/build/syndrome.img bs=1M count=64 && mkfs.fat -F 32 /src/build/syndrome.img && mmd -i /src/build/syndrome.img ::/EFI && mmd -i /src/build/syndrome.img ::/EFI/BOOT && mcopy -i /src/build/syndrome.img /src/build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI"
+        bash -c "dd if=/dev/zero of=/src/build/syndrome.img bs=1M count=64 && mkfs.fat -F 32 /src/build/syndrome.img && mmd -i /src/build/syndrome.img ::/EFI && mmd -i /src/build/syndrome.img ::/EFI/BOOT && mcopy -i /src/build/syndrome.img /src/build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI && (cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || true)"
 
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $DiskImage)) {
         throw "Failed to create bootable disk image."
     }
     Write-Success "Bootable disk image ready: build/syndrome.img"
 }
+
+# Locate OVMF UEFI firmware
+$QemuDir = Split-Path $QemuPath
+$OvmfCandidates = @(
+    (Join-Path $WorkspaceRoot "build\ovmf.fd"),
+    (Join-Path $QemuDir "share\edk2-x86_64-code.fd"),
+    (Join-Path $QemuDir "share\qemu\edk2-x86_64-code.fd"),
+    (Join-Path $QemuDir "edk2-x86_64-code.fd"),
+    "C:\Program Files\qemu\share\edk2-x86_64-code.fd",
+    "C:\Program Files\qemu\share\qemu\edk2-x86_64-code.fd",
+    "C:\Program Files\qemu\edk2-x86_64-code.fd",
+    "C:\msys64\ucrt64\share\qemu\edk2-x86_64-code.fd",
+    "C:\msys64\mingw64\share\qemu\edk2-x86_64-code.fd",
+    (Join-Path $env:USERPROFILE "scoop\apps\qemu\current\share\edk2-x86_64-code.fd"),
+    "C:\ProgramData\chocolatey\lib\qemu\tools\share\edk2-x86_64-code.fd"
+)
+
+$OvmfPath = $OvmfCandidates | Where-Object { $_ -and (Test-Path $_) } | Select-Object -First 1
+
+if (-not $OvmfPath) {
+    # If not found locally, try extracting it from docker image if docker is available
+    Write-Info "OVMF firmware not found locally. Extracting from build image..."
+    try {
+        if (-not (Test-Path $BuildDir)) { New-Item -ItemType Directory -Path $BuildDir | Out-Null }
+        docker run --rm -v "${WorkspaceRoot}:/src" syndromeos-build cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>&1 | Out-Null
+        $BuildOvmf = Join-Path $WorkspaceRoot "build\ovmf.fd"
+        if (Test-Path $BuildOvmf) {
+            $OvmfPath = $BuildOvmf
+        }
+    } catch {}
+}
+
+if (-not $OvmfPath) {
+    Write-Host ""
+    Write-Host "[ERROR] OVMF UEFI firmware (edk2-x86_64-code.fd / OVMF_CODE.fd) was not found." -ForegroundColor Red
+    Write-Host "Please ensure QEMU is installed with UEFI support or run the build pipeline first." -ForegroundColor Yellow
+    throw "OVMF firmware missing."
+}
+Write-Success "OVMF Firmware: $OvmfPath"
 
 # Launch QEMU with UEFI firmware
 Write-Step "4/4" "Booting SyndromeOS in QEMU..."

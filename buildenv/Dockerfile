@@ -6,25 +6,22 @@ RUN apt-get update && \
     apt-get install -y \
         build-essential \
         gcc \
+        g++ \
         binutils \
         cmake \
         make \
-        git \
-        wget \
-        ca-certificates \
+        gnu-efi \
+        ovmf \
         dosfstools \
         mtools \
+        ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Build GNU-EFI from source
-WORKDIR /opt
-
-RUN git clone --depth 1 https://git.code.sf.net/p/gnu-efi/code gnu-efi
-
-WORKDIR /opt/gnu-efi
-
-RUN make
-
-RUN make install
+# Compatibility links for /usr/local
+RUN ln -sf /usr/include/efi /usr/local/include/efi && \
+    ln -sf /usr/lib/libefi.a /usr/local/lib/libefi.a && \
+    ln -sf /usr/lib/libgnuefi.a /usr/local/lib/libgnuefi.a && \
+    ln -sf /usr/lib/crt0-efi-x86_64.o /usr/local/lib/crt0-efi-x86_64.o && \
+    ln -sf /usr/lib/elf_x86_64_efi.lds /usr/local/lib/elf_x86_64_efi.lds
 
 WORKDIR /workspaces/SyndromeOS

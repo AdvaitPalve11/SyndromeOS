@@ -19,8 +19,13 @@ find_path(EFI_INCLUDE_DIR
     REQUIRED
 )
 
-set(EFI_ARCH_INCLUDE_DIR
-    /usr/local/include/efi/x86_64
+find_path(EFI_ARCH_INCLUDE_DIR
+    NAMES efibind.h
+    PATHS
+        ${EFI_INCLUDE_DIR}/x86_64
+        /usr/local/include/efi/x86_64
+        /usr/include/efi/x86_64
+    REQUIRED
 )
 
 find_file(EFI_LINKER_SCRIPT
@@ -66,6 +71,11 @@ find_library(GNUEFI_LIBRARY
         /usr/lib/gnuefi
     REQUIRED
 )
+
+get_filename_component(EFI_LIB_DIR ${EFI_LIBRARY} DIRECTORY)
+get_filename_component(GNUEFI_LIB_DIR ${GNUEFI_LIBRARY} DIRECTORY)
+
+find_program(EFI_LD NAMES ld.bfd ld PATHS /usr/bin /usr/local/bin REQUIRED)
 
 # Output definitions
 set(BOOT_OBJECTS
@@ -163,13 +173,16 @@ add_custom_command(
 # Link bootloader using GNU-EFI
 add_custom_command(
     OUTPUT ${BOOT_ELF}
-    COMMAND /usr/bin/ld
+    COMMAND ${EFI_LD}
         -nostdlib
         -znocombreloc
         -T${EFI_LINKER_SCRIPT}
         -shared
         -Bsymbolic
+        -L${EFI_LIB_DIR}
+        -L${GNUEFI_LIB_DIR}
         -L/usr/local/lib
+        -L/usr/lib
         ${EFI_CRT}
         ${BOOT_OBJECTS}
         -lgnuefi

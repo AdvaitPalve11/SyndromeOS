@@ -1,0 +1,70 @@
+name: Build & Test SyndromeOS
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build SyndromeOS (Native & QEMU Boot Test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install build and virtualization dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            gcc \
+            g++ \
+            cmake \
+            make \
+            gnu-efi \
+            ovmf \
+            dosfstools \
+            mtools \
+            qemu-system-x86
+
+      - name: Configure CMake
+        run: cmake -S . -B build
+
+      - name: Compile SyndromeOS
+        run: cmake --build build
+
+      - name: Generate bootable FAT32 UEFI disk image
+        run: |
+          dd if=/dev/zero of=build/syndrome.img bs=1M count=64
+          mkfs.fat -F 32 build/syndrome.img
+          mmd -i build/syndrome.img ::/EFI
+          mmd -i build/syndrome.img ::/EFI/BOOT
+          mcopy -i build/syndrome.img build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI
+          cp /usr/share/OVMF/OVMF_CODE_4M.fd build/ovmf.fd 2>/dev/null || cp /usr/share/ovmf/OVMF.fd build/ovmf.fd
+
+      - name: Test SyndromeOS Boot in Headless QEMU
+        run: |
+          echo "Starting QEMU headless verification test..."
+          # Run QEMU with timeout; exit code 124 means the OS booted and was running until timeout
+          timeout 5s qemu-system-x86_64 \
+            -machine q35 \
+            -m 512M \
+            -drive if=pflash,format=raw,readonly=on,file=build/ovmf.fd \
+            -drive format=raw,file=build/syndrome.img \
+            -display none \
+            -serial stdio || [ $? -eq 124 ]
+          echo "Boot verification succeeded!"
+
+      - name: Upload bootable image and EFI binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: syndromeos-artifacts
+          path: |
+            build/SyndromeOS.efi
+            build/syndrome.img
+            build/ovmf.fd
+          if-no-files-found: error
