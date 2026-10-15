@@ -24,10 +24,10 @@
 
 ## Features
 
-- **UEFI  Bootloader:** Clean handoff and memory descriptor acquisition via GNU-EFI.
+- **UEFI  Bootloader:** Clean handoff via GNU-EFI.
 - **Linear Framebuffer (GOP):** Custom font and color
 - **Hardware Drivers:** Interval Timers and I/O ports
-- **Reproducible Toolchain:** 
+- **Reproducible Toolchain** 
 
 ## Quick Start
 
