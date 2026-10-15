@@ -16,7 +16,9 @@ void fill_rect(const Framebuffer& fb, uint32_t x, uint32_t y, uint32_t w, uint32
 }
 
 // Pure bare-metal kernel entry point from entry.cpp
-extern "C" void kernel_main(const BootInfo* boot_info) {
+extern "C" void kernel_main(const BootInfo* boot_info){
+
+    // discover where the physical screen pixels are located in RAM.
     const Framebuffer& fb = boot_info->fb;
 
     // Clear the entire display(0x001E293B)
