@@ -5,30 +5,30 @@ all: run
 
 run:
 	@if [ "$$(uname -s 2>/dev/null)" = "Linux" ] || [ "$$(uname -s 2>/dev/null)" = "Darwin" ]; then \
-		chmod +x ./run.sh && ./run.sh; \
+		chmod +x ./scripts/run.sh && ./scripts/run.sh; \
 	else \
-		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./run.ps1; \
+		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/run.ps1; \
 	fi
 
 run-fast:
 	@if [ "$$(uname -s 2>/dev/null)" = "Linux" ] || [ "$$(uname -s 2>/dev/null)" = "Darwin" ]; then \
-		chmod +x ./run.sh && ./run.sh --skip-build; \
+		chmod +x ./scripts/run.sh && ./scripts/run.sh --skip-build; \
 	else \
-		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./run.ps1 -SkipBuild; \
+		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/run.ps1 -SkipBuild; \
 	fi
 
 debug:
 	@if [ "$$(uname -s 2>/dev/null)" = "Linux" ] || [ "$$(uname -s 2>/dev/null)" = "Darwin" ]; then \
-		chmod +x ./run.sh && ./run.sh --debug; \
+		chmod +x ./scripts/run.sh && ./scripts/run.sh --debug; \
 	else \
-		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./run.ps1 -EnableDebug; \
+		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/run.ps1 -EnableDebug; \
 	fi
 
 native:
 	@if [ "$$(uname -s 2>/dev/null)" = "Linux" ] || [ "$$(uname -s 2>/dev/null)" = "Darwin" ]; then \
-		chmod +x ./run.sh && ./run.sh --native; \
+		chmod +x ./scripts/run.sh && ./scripts/run.sh --native; \
 	else \
-		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./run.ps1; \
+		powershell.exe -NoProfile -ExecutionPolicy Bypass -File ./scripts/run.ps1; \
 	fi
 
 clean:

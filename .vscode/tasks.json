@@ -12,7 +12,7 @@
                 "-ExecutionPolicy",
                 "Bypass",
                 "-File",
-                "${workspaceFolder}\\tools\\run.ps1"
+                "${workspaceFolder}\\scripts\\run.ps1"
             ],
 
             "options": {

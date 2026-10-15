@@ -17,7 +17,7 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
-$WorkspaceRoot = $PSScriptRoot
+$WorkspaceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
 function Write-Step {
     param([string]$Step, [string]$Message)

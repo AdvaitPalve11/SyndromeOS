@@ -71,9 +71,10 @@ SyndromeOS includes automated runners that detect your virtualization environmen
    ```
 2. Run the pipeline (PowerShell):
    ```powershell
-   .\run.ps1
+   .\scripts\run.ps1
+   # or
+   make run
    ```
-   *Or simply double-click `run.bat` in Windows File Explorer.*
 
 ### 🐧 Linux (Ubuntu / Debian / Fedora / Arch)
 
@@ -90,7 +91,7 @@ SyndromeOS includes automated runners that detect your virtualization environmen
    ```
 2. Run the pipeline:
    ```bash
-   ./run.sh
+   ./scripts/run.sh
    # or
    make run
    ```
@@ -103,7 +104,7 @@ SyndromeOS includes automated runners that detect your virtualization environmen
    ```
 2. Run the pipeline:
    ```bash
-   ./run.sh
+   ./scripts/run.sh
    # or
    make run
    ```
@@ -112,14 +113,14 @@ SyndromeOS includes automated runners that detect your virtualization environmen
 
 ## Runner Options & Flags
 
-Both `run.ps1` (Windows) and `run.sh` (Linux/macOS) support identical command-line flags:
+Both `scripts/run.ps1` (Windows) and `scripts/run.sh` (Linux/macOS) support identical command-line flags:
 
 | Flag (PowerShell) | Flag (Bash) | Description |
 | :--- | :--- | :--- |
-| `.\run.ps1` | `./run.sh` | Full pipeline: compile OS, format FAT32 image, boot QEMU |
-| `.\run.ps1 -SkipBuild` | `./run.sh --skip-build` | Fast boot: skip compilation and launch current disk image |
-| `.\run.ps1 -EnableDebug` | `./run.sh --debug` | GDB stub enabled on `localhost:1234` (-s -S) with serial to stdio |
-| *N/A* | `./run.sh --native` | Force native build on Linux without Docker |
+| `.\scripts\run.ps1` | `./scripts/run.sh` | Full pipeline: compile OS, format FAT32 image, boot QEMU |
+| `.\scripts\run.ps1 -SkipBuild` | `./scripts/run.sh --skip-build` | Fast boot: skip compilation and launch current disk image |
+| `.\scripts\run.ps1 -EnableDebug` | `./scripts/run.sh --debug` | GDB stub enabled on `localhost:1234` (-s -S) with serial to stdio |
+| *N/A* | `./scripts/run.sh --native` | Force native build on Linux without Docker |
 
 ---
 
@@ -138,7 +139,7 @@ If you prefer building directly on Linux without Docker:
 sudo apt install build-essential cmake gnu-efi ovmf dosfstools mtools qemu-system-x86
 
 # 2. Build and run
-./run.sh --native
+./scripts/run.sh --native
 ```
 
 ---
@@ -175,10 +176,10 @@ To debug kernel execution line-by-line:
 1. Launch QEMU in debug mode:
    ```bash
    # Linux / macOS
-   ./run.sh --debug
+   ./scripts/run.sh --debug
 
    # Windows
-   .\run.ps1 -EnableDebug
+   .\scripts\run.ps1 -EnableDebug
    ```
 2. In a separate terminal, connect with GDB:
    ```bash
@@ -204,12 +205,11 @@ SyndromeOS/
 │   │   ├── graphics/        # UEFI GOP logo, color palettes, fonts
 │   │   └── uefi/            # UEFI entry point (entry.cpp), GOP setup, handoff
 │   └── kernel/              # Freestanding 64-bit kernel (kmain, PIT, IO, bootinfo)
-├── tools/                   # Helper scripts for modular pipelines
+├── scripts/                 # Automated cross-platform build and runner scripts
+│   ├── run.ps1              # Comprehensive Windows PowerShell runner
+│   └── run.sh               # Comprehensive Linux/macOS POSIX Bash runner
 ├── CMakeLists.txt           # Modern CMake configuration for freestanding UEFI target
 ├── Makefile                 # Standard Make targets (make, make run, make debug, make clean)
-├── run.bat                  # 1-click Windows File Explorer launcher
-├── run.ps1                  # Comprehensive Windows PowerShell runner
-├── run.sh                   # Comprehensive Linux/macOS POSIX Bash runner
 └── README.md                # Documentation and architecture guide
 ```
 

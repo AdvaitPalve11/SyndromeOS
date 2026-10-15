@@ -6,7 +6,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$WORKSPACE_ROOT"
 
 # Color definitions
 CYAN='\033[0;36m'
@@ -91,8 +92,8 @@ if [ -z "$QEMU_BIN" ]; then
 fi
 write_success "QEMU: $QEMU_BIN"
 
-DISK_IMAGE="$SCRIPT_DIR/build/syndrome.img"
-EFI_BINARY="$SCRIPT_DIR/build/SyndromeOS.efi"
+DISK_IMAGE="$WORKSPACE_ROOT/build/syndrome.img"
+EFI_BINARY="$WORKSPACE_ROOT/build/SyndromeOS.efi"
 
 # 2. Build pipeline
 if [ "$SKIP_BUILD" = true ]; then
@@ -122,11 +123,11 @@ else
 
         write_step "3/4" "Compiling SyndromeOS & building disk image via Docker..."
         write_info "Building container image 'syndromeos-build'..."
-        docker build -t syndromeos-build "$SCRIPT_DIR/buildenv"
+        docker build -t syndromeos-build "$WORKSPACE_ROOT/buildenv"
 
         write_info "Building SyndromeOS inside container..."
         docker run --rm \
-            -v "$SCRIPT_DIR:/src" \
+            -v "$WORKSPACE_ROOT:/src" \
             syndromeos-build \
             bash -c "rm -rf /src/build && mkdir -p /src/build && cmake -S /src -B /src/build && cmake --build /src/build && dd if=/dev/zero of=/src/build/syndrome.img bs=1M count=64 && mkfs.fat -F 32 /src/build/syndrome.img && mmd -i /src/build/syndrome.img ::/EFI && mmd -i /src/build/syndrome.img ::/EFI/BOOT && mcopy -i /src/build/syndrome.img /src/build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI && (cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || true)"
     else
@@ -151,10 +152,10 @@ else
         write_success "Native toolchain is ready."
 
         write_step "3/4" "Compiling SyndromeOS natively..."
-        rm -rf "$SCRIPT_DIR/build"
-        mkdir -p "$SCRIPT_DIR/build"
-        cmake -S "$SCRIPT_DIR" -B "$SCRIPT_DIR/build"
-        cmake --build "$SCRIPT_DIR/build"
+        rm -rf "$WORKSPACE_ROOT/build"
+        mkdir -p "$WORKSPACE_ROOT/build"
+        cmake -S "$WORKSPACE_ROOT" -B "$WORKSPACE_ROOT/build"
+        cmake --build "$WORKSPACE_ROOT/build"
 
         write_info "Generating FAT32 bootable image..."
         dd if=/dev/zero of="$DISK_IMAGE" bs=1M count=64 status=none
@@ -175,7 +176,7 @@ fi
 # 3. Locate OVMF UEFI firmware
 OVMF_PATH=""
 OVMF_CANDIDATES=(
-    "$SCRIPT_DIR/build/ovmf.fd"
+    "$WORKSPACE_ROOT/build/ovmf.fd"
     "/usr/share/OVMF/OVMF_CODE.fd"
     "/usr/share/OVMF/OVMF_CODE_4M.fd"
     "/usr/share/ovmf/OVMF.fd"
@@ -197,10 +198,10 @@ done
 # If not found, try extracting from Docker container if available
 if [ -z "$OVMF_PATH" ] && command -v docker >/dev/null 2>&1; then
     write_info "Extracting OVMF firmware from build container..."
-    mkdir -p "$SCRIPT_DIR/build"
-    docker run --rm -v "$SCRIPT_DIR:/src" syndromeos-build cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || true
-    if [ -f "$SCRIPT_DIR/build/ovmf.fd" ]; then
-        OVMF_PATH="$SCRIPT_DIR/build/ovmf.fd"
+    mkdir -p "$WORKSPACE_ROOT/build"
+    docker run --rm -v "$WORKSPACE_ROOT:/src" syndromeos-build cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || true
+    if [ -f "$WORKSPACE_ROOT/build/ovmf.fd" ]; then
+        OVMF_PATH="$WORKSPACE_ROOT/build/ovmf.fd"
     fi
 fi
 
