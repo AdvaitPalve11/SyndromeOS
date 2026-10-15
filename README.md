@@ -26,9 +26,9 @@
 ## Features
 
 - **UEFI  Bootloader:** Clean handoff and memory descriptor acquisition via GNU-EFI.
-- **Linear Framebuffer (GOP):** Hardware-independent rendering with custom font and color engines.
-- **Hardware Drivers:** Programmable Interval Timer (PIT) calibrated timing and low-level port I/O.
-- **Reproducible Toolchain:** Fully automated containerized builds with Docker, CMake, and QEMU.
+- **Linear Framebuffer (GOP):** Custom font and color
+- **Hardware Drivers:** Interval Timers and I/O ports
+- **Reproducible Toolchain:** 
 
 ## Quick Start
 
