@@ -1,21 +1,16 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(SyndromeOS LANGUAGES C ASM)
+project(SyndromeOS LANGUAGES C CXX ASM)
 
-# ------------------------------------------------------------
-# SyndromeOS
 # Target: x86_64 UEFI
-# ------------------------------------------------------------
-
 set(CMAKE_SYSTEM_NAME Generic)
 
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ------------------------------------------------------------
-# GNU-EFI
-# ------------------------------------------------------------
-
+# Locate GNU-EFI components
 find_path(EFI_INCLUDE_DIR
     NAMES efi.h
     PATHS
@@ -72,18 +67,12 @@ find_library(GNUEFI_LIBRARY
     REQUIRED
 )
 
-# ------------------------------------------------------------
-# UEFI Bootloader
-# ------------------------------------------------------------
-
-set(BOOT_SOURCES
-    ${CMAKE_SOURCE_DIR}/boot/uefi/main.c
-    ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.c
-)
-
+# Output definitions
 set(BOOT_OBJECTS
-    ${CMAKE_BINARY_DIR}/main.o
+    ${CMAKE_BINARY_DIR}/entry.o
     ${CMAKE_BINARY_DIR}/graphics.o
+    ${CMAKE_BINARY_DIR}/kmain.o
+    ${CMAKE_BINARY_DIR}/pit.o
 )
 
 set(BOOT_ELF
@@ -94,66 +83,86 @@ set(BOOT_EFI
     ${CMAKE_BINARY_DIR}/SyndromeOS.efi
 )
 
-# ------------------------------------------------------------
-# Compile bootloader
-# ------------------------------------------------------------
+# Common flags for freestanding UEFI
+set(EFI_COMMON_FLAGS
+    -I${EFI_INCLUDE_DIR}
+    -I${EFI_ARCH_INCLUDE_DIR}
+    -I${CMAKE_SOURCE_DIR}/src
+    -I${CMAKE_SOURCE_DIR}/src/kernel
+    -I${CMAKE_SOURCE_DIR}/src/boot
+    -DEFI_FUNCTION_WRAPPER
+    -fpic
+    -ffreestanding
+    -fno-stack-protector
+    -fno-stack-check
+    -fshort-wchar
+    -mno-red-zone
+    -mcmodel=small
+)
 
+set(EFI_CXX_FLAGS
+    ${EFI_COMMON_FLAGS}
+    -fno-exceptions
+    -fno-rtti
+    -fno-use-cxa-atexit
+    -fpermissive
+)
+
+# Compile source files
 add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/main.o
-
-    COMMAND ${CMAKE_C_COMPILER}
-        -I${EFI_INCLUDE_DIR}
-        -I${EFI_ARCH_INCLUDE_DIR}
-        -DEFI_FUNCTION_WRAPPER
-        -fpic
-        -ffreestanding
-        -fno-stack-protector
-        -fno-stack-check
-        -fshort-wchar
-        -mno-red-zone
-        -mcmodel=small
-        -c ${CMAKE_SOURCE_DIR}/boot/uefi/main.c
-        -o ${CMAKE_BINARY_DIR}/main.o
-
+    OUTPUT ${CMAKE_BINARY_DIR}/entry.o
+    COMMAND ${CMAKE_CXX_COMPILER}
+        ${EFI_CXX_FLAGS}
+        -c ${CMAKE_SOURCE_DIR}/src/boot/uefi/entry.cpp
+        -o ${CMAKE_BINARY_DIR}/entry.o
     DEPENDS
-        ${CMAKE_SOURCE_DIR}/boot/uefi/main.c
-        ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.h
-
-    COMMENT "Compiling UEFI bootloader"
+        ${CMAKE_SOURCE_DIR}/src/boot/uefi/entry.cpp
+        ${CMAKE_SOURCE_DIR}/src/boot/graphics/graphics.h
+        ${CMAKE_SOURCE_DIR}/src/kernel/bootinfo.h
+    COMMENT "Compiling UEFI bootloader entry"
 )
 
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/graphics.o
-
     COMMAND ${CMAKE_C_COMPILER}
-        -I${EFI_INCLUDE_DIR}
-        -I${EFI_ARCH_INCLUDE_DIR}
-        -DEFI_FUNCTION_WRAPPER
-        -fpic
-        -ffreestanding
-        -fno-stack-protector
-        -fno-stack-check
-        -fshort-wchar
-        -mno-red-zone
-        -mcmodel=small
-        -c ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.c
+        ${EFI_COMMON_FLAGS}
+        -c ${CMAKE_SOURCE_DIR}/src/boot/graphics/graphics.c
         -o ${CMAKE_BINARY_DIR}/graphics.o
-
     DEPENDS
-        ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.c
-        ${CMAKE_SOURCE_DIR}/boot/graphics/graphics.h
-        ${CMAKE_SOURCE_DIR}/boot/graphics/logo.h
-
+        ${CMAKE_SOURCE_DIR}/src/boot/graphics/graphics.c
+        ${CMAKE_SOURCE_DIR}/src/boot/graphics/graphics.h
+        ${CMAKE_SOURCE_DIR}/src/boot/graphics/logo.h
     COMMENT "Compiling graphics renderer"
 )
 
-# ------------------------------------------------------------
-# Link bootloader using GNU-EFI
-# ------------------------------------------------------------
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/kmain.o
+    COMMAND ${CMAKE_CXX_COMPILER}
+        ${EFI_CXX_FLAGS}
+        -c ${CMAKE_SOURCE_DIR}/src/kernel/kmain.cpp
+        -o ${CMAKE_BINARY_DIR}/kmain.o
+    DEPENDS
+        ${CMAKE_SOURCE_DIR}/src/kernel/kmain.cpp
+        ${CMAKE_SOURCE_DIR}/src/kernel/bootinfo.h
+    COMMENT "Compiling kernel main"
+)
 
 add_custom_command(
-    OUTPUT ${BOOT_ELF}
+    OUTPUT ${CMAKE_BINARY_DIR}/pit.o
+    COMMAND ${CMAKE_CXX_COMPILER}
+        ${EFI_CXX_FLAGS}
+        -c ${CMAKE_SOURCE_DIR}/src/kernel/pit.cpp
+        -o ${CMAKE_BINARY_DIR}/pit.o
+    DEPENDS
+        ${CMAKE_SOURCE_DIR}/src/kernel/pit.cpp
+        ${CMAKE_SOURCE_DIR}/src/kernel/pit.h
+        ${CMAKE_SOURCE_DIR}/src/kernel/io.h
+    COMMENT "Compiling PIT driver"
+)
 
+# Link bootloader using GNU-EFI
+add_custom_command(
+    OUTPUT ${BOOT_ELF}
     COMMAND /usr/bin/ld
         -nostdlib
         -znocombreloc
@@ -166,61 +175,42 @@ add_custom_command(
         -lgnuefi
         -lefi
         -o ${BOOT_ELF}
-
     DEPENDS ${BOOT_OBJECTS}
-
-    COMMENT "Linking UEFI bootloader"
+    COMMENT "Linking UEFI binary"
 )
 
-# ------------------------------------------------------------
-# Convert ELF -> PE/COFF EFI executable
-# ------------------------------------------------------------
-
+# Convert ELF to PE/COFF EFI executable
 add_custom_command(
     OUTPUT ${BOOT_EFI}
-
     COMMAND ${CMAKE_OBJCOPY}
-    -j .text
-    -j .sdata
-    -j .data
-    -j .rodata
-    -j .dynamic
-    -j .dynsym
-    -j .rel
-    -j .rela
-    -j .rel.*
-    -j .rela.*
-    -j .reloc
-    --target=efi-app-x86_64
-    ${BOOT_ELF}
-    ${BOOT_EFI}
-
+        -j .text
+        -j .sdata
+        -j .data
+        -j .rodata
+        -j .dynamic
+        -j .dynsym
+        -j .rel
+        -j .rela
+        -j .rel.*
+        -j .rela.*
+        -j .reloc
+        --target=efi-app-x86_64
+        ${BOOT_ELF}
+        ${BOOT_EFI}
     DEPENDS ${BOOT_ELF}
-
     COMMENT "Creating SyndromeOS.efi"
 )
 
-# ------------------------------------------------------------
-# UEFI target
-# ------------------------------------------------------------
-
+# Default target
 add_custom_target(uefi ALL
     DEPENDS ${BOOT_EFI}
 )
 
-# ------------------------------------------------------------
-# Build information
-# ------------------------------------------------------------
-
-message(STATUS "")
-message(STATUS "========================================")
-message(STATUS "          SyndromeOS Build")
-message(STATUS "========================================")
+# Build configuration status
+message(STATUS "SyndromeOS Build")
 message(STATUS "EFI include : ${EFI_INCLUDE_DIR}")
 message(STATUS "EFI arch    : ${EFI_ARCH_INCLUDE_DIR}")
 message(STATUS "EFI linker  : ${EFI_LINKER_SCRIPT}")
 message(STATUS "EFI CRT     : ${EFI_CRT}")
 message(STATUS "EFI library : ${EFI_LIBRARY}")
 message(STATUS "GNU-EFI     : ${GNUEFI_LIBRARY}")
-message(STATUS "========================================")
-message(STATUS "")
