@@ -15,4 +15,12 @@ struct EFI_GUID{
     uint8_t Data4[8];
 };
 
+struct EFI_TABLE_HEADER{
+    uint64_t Signature;
+    uint32_t Revision;
+    uint32_t HeaderSize;
+    uint32_t CRC32;
+    uint32_t Reserved;
+};
+
 
