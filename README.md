@@ -52,7 +52,22 @@ The goal is to build the system from the ground up and eventually run custom app
 
 ## Build & Run
 
-From PowerShell:
+From PowerShell (runs the entire pipeline: Docker check -> compile -> FAT32 image -> QEMU):
 
 ```powershell
-.\tools\run.ps1
+.\run.ps1
+```
+
+### Options:
+
+* **Fast run (skip compilation & run existing disk image):**
+  ```powershell
+  .\run.ps1 -SkipBuild
+  ```
+
+* **Debug run (with GDB stub on port 1234 and serial to stdio):**
+  ```powershell
+  .\run.ps1 -Debug
+  ```
+
+Alternatively, run `.\tools\run.ps1` or double-click `run.bat` in Windows File Explorer.

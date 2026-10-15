@@ -1,42 +1,23 @@
 $ErrorActionPreference = "Stop"
+$WorkspaceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
-Write-Host ""
-Write-Host "========================================"
-Write-Host "        Building SyndromeOS"
-Write-Host "========================================"
-Write-Host ""
-
-# Build the Docker development environment
-Write-Host "[1/2] Building Docker environment..."
-
-docker build `
-    -t syndromeos-build `
-    ./buildenv
+# Build Docker development environment
+Write-Host "[1/2] Building Docker build image..."
+docker build -t syndromeos-build (Join-Path $WorkspaceRoot "buildenv")
 
 if ($LASTEXITCODE -ne 0) {
     throw "Docker image build failed."
 }
 
-# Build SyndromeOS inside the container
-Write-Host ""
-Write-Host "[2/2] Building SyndromeOS..."
-
+# Compile SyndromeOS inside container
+Write-Host "`n[2/2] Compiling SyndromeOS..."
 docker run --rm `
-    -v "${PWD}:/src" `
+    -v "${WorkspaceRoot}:/src" `
     syndromeos-build `
     bash -c "rm -rf /src/build && mkdir -p /src/build && cmake -S /src -B /src/build && cmake --build /src/build"
 
-    
 if ($LASTEXITCODE -ne 0) {
     throw "SyndromeOS build failed."
 }
 
-Write-Host ""
-Write-Host "========================================"
-Write-Host "      SyndromeOS build successful"
-Write-Host "========================================"
-Write-Host ""
-
-Write-Host "Output:"
-Write-Host "  build/SyndromeOS.efi"
-Write-Host ""
+Write-Host "`nBuild complete: build/SyndromeOS.efi"
