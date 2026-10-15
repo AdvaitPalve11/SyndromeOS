@@ -1,44 +1,57 @@
-<p align="center">
-  <img src="Assets/BlackandWhiteEye.jpg" width="100" alt="SyndromeOS Logo">
-</p>
+<div align="center">
 
-<h1 align="center">SyndromeOS</h1>
+<img src="Assets/BlackandWhiteEye.jpg" width="90" alt="SyndromeOS Logo">
 
-<p align="center">
-  <i>A 64-bit x86_64 operating system built from scratch.</i><br><br>
-  <img src="https://img.shields.io/badge/Arch-x86__64-blue.svg" alt="Architecture">
-  <img src="https://img.shields.io/badge/Firmware-UEFI%202.x-brightgreen.svg" alt="Firmware">
-  <img src="https://img.shields.io/badge/Build-CMake%20%7C%20Docker-orange.svg" alt="Build">
-</p>
+# SyndromeOS
 
-<p align="center">
-  <img src="Assets/BootImage.png" width="700" alt="SyndromeOS Boot Image">
-</p>
+**A 64-bit bare-metal x86_64 operating system built from scratch.**
+
+[![Architecture](https://img.shields.io/badge/arch-x86__64-2ea44f?style=flat-square)](https://github.com/)
+[![Firmware](https://img.shields.io/badge/firmware-UEFI%202.x-0969da?style=flat-square)](https://github.com/)
+[![Build](https://img.shields.io/badge/build-CMake%20%7C%20Docker-8250df?style=flat-square)](https://github.com/)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-informational?style=flat-square)](https://github.com/)
+
+<br>
+
+<img src="Assets/BootImage.png" width="650" alt="SyndromeOS Boot Display">
+
+</div>
 
 ---
 
 ## Overview
 
-**SyndromeOS** is a bare-metal `x86_64` operating system written in C, C++, Assembly, and Rust. It boots via a custom UEFI 2.x bootloader (`BOOTX64.EFI`), initializes a Graphics Output Protocol (GOP) linear framebuffer, retrieves the hardware memory map, exits Boot Services, and jumps into a freestanding 64-bit Long Mode kernel.
+**SyndromeOS** is a freestanding 64-bit operating system developed for the `x86_64` architecture. It initializes via a custom UEFI bootloader (`BOOTX64.EFI`).
+
+## Features
+
+- **UEFI  Bootloader:** Clean handoff and memory descriptor acquisition via GNU-EFI.
+- **Linear Framebuffer (GOP):** Hardware-independent rendering with custom font and color engines.
+- **Hardware Drivers:** Programmable Interval Timer (PIT) calibrated timing and low-level port I/O.
+- **Reproducible Toolchain:** Fully automated containerized builds with Docker, CMake, and QEMU.
 
 ## Quick Start
 
-Requires **Docker** and **QEMU** (`winget install SoftwareFreedomConservancy.QEMU`, `apt install qemu-system-x86 ovmf`, or `brew install qemu`).
+### Prerequisites
+- **QEMU** with OVMF firmware (`winget install SoftwareFreedomConservancy.QEMU`, `apt install qemu-system-x86 ovmf`, or `brew install qemu`)
+- **Docker** (recommended for cross-platform builds)
 
-| Task | Linux / macOS | Windows (PowerShell) |
-| :--- | :--- | :--- |
-| **Build & Run** | `./scripts/run.sh` (or `make run`) | `.\scripts\run.ps1` |
-| **Skip Build** | `./scripts/run.sh --skip-build` | `.\scripts\run.ps1 -SkipBuild` |
-| **Debug (GDB)** | `./scripts/run.sh --debug` | `.\scripts\run.ps1 -EnableDebug` |
-| **Native Linux** | `./scripts/run.sh --native` | *N/A* |
+### Launch
 
-**Debugging:** After launching with `--debug` / `-EnableDebug`, attach GDB via:
-```bash
-gdb build/SyndromeOS.so -ex "target remote localhost:1234" -ex "b efi_main" -ex "c"
+| Platform | Build & Run | Fast Run (Skip Build) | Debug (GDB Stub) |
+| :--- | :--- | :--- | :--- |
+| **Windows** | `.\scripts\run.ps1` | `.\scripts\run.ps1 -SkipBuild` | `.\scripts\run.ps1 -EnableDebug` |
+| **Linux / macOS** | `./scripts/run.sh` | `./scripts/run.sh --skip-build` | `./scripts/run.sh --debug` |
+| **Make** | `make run` | `make run-fast` | `make debug` |
+
+
+## Project Structure
+
 ```
-
-## Architecture
-
-- **`src/boot/`** — UEFI entry point (`entry.cpp`), GOP framebuffer initialization, and Boot Services handoff.
-- **`src/kernel/`** — Freestanding 64-bit kernel (`kmain.cpp`), PIT timer, hardware I/O, and memory management.
-- **`buildenv/` & `scripts/`** — Dockerized Ubuntu 24.04 cross-compiler toolchain and automated QEMU runners.
+SyndromeOS/
+├── src/boot/        # UEFI bootloader, GOP graphics, fonts, and handoff
+├── src/kernel/      # 64-bit kernel entry (kmain), PIT timer, and I/O
+├── buildenv/        # Dockerized Ubuntu build environment
+├── scripts/         # Automated cross-platform pipeline runners
+└── Makefile         # Standard build and execution shortcuts
+```
