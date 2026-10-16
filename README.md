@@ -7,7 +7,6 @@
 **A 64-bit bare-metal x86_64 operating system built from scratch.**
 
 [![Architecture](https://img.shields.io/badge/arch-x86__64-2ea44f?style=flat-square)](https://github.com/)
-[![Firmware](https://img.shields.io/badge/firmware-UEFI%202.x-0969da?style=flat-square)](https://github.com/)
 [![Build](https://img.shields.io/badge/build-CMake%20%7C%20Docker-8250df?style=flat-square)](https://github.com/)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-informational?style=flat-square)](https://github.com/)
 
@@ -25,10 +24,10 @@
 
 ## Features
 
-- **UEFI  Bootloader:** Clean handoff and memory descriptor acquisition via GNU-EFI.
-- **Linear Framebuffer (GOP):** Hardware-independent rendering with custom font and color engines.
-- **Hardware Drivers:** Programmable Interval Timer (PIT) calibrated timing and low-level port I/O.
-- **Reproducible Toolchain:** Fully automated containerized builds with Docker, CMake, and QEMU.
+- **UEFI  Bootloader:** Clean handoff via GNU-EFI.
+- **Linear Framebuffer (GOP):** Custom font and color
+- **Hardware Drivers:** Interval Timers and I/O ports
+- **Reproducible Toolchain** 
 
 ## Quick Start
 
