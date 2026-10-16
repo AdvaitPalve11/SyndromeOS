@@ -176,6 +176,7 @@ add_custom_command(
     COMMAND ${EFI_LD}
         -nostdlib
         -znocombreloc
+        -z defs
         -T${EFI_LINKER_SCRIPT}
         -shared
         -Bsymbolic

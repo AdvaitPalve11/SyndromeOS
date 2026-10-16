@@ -129,7 +129,7 @@ else
         docker run --rm \
             -v "$WORKSPACE_ROOT:/src" \
             syndromeos-build \
-            bash -c "rm -rf /src/build && mkdir -p /src/build && cmake -S /src -B /src/build && cmake --build /src/build && dd if=/dev/zero of=/src/build/syndrome.img bs=1M count=64 && mkfs.fat -F 32 /src/build/syndrome.img && mmd -i /src/build/syndrome.img ::/EFI && mmd -i /src/build/syndrome.img ::/EFI/BOOT && mcopy -i /src/build/syndrome.img /src/build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI && (cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || true)"
+            bash -c "rm -rf /src/build && mkdir -p /src/build && cmake -S /src -B /src/build && cmake --build /src/build && dd if=/dev/zero of=/src/build/syndrome.img bs=1M count=64 && mkfs.fat -F 32 /src/build/syndrome.img && mmd -i /src/build/syndrome.img ::/EFI && mmd -i /src/build/syndrome.img ::/EFI/BOOT && mcopy -i /src/build/syndrome.img /src/build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI && (cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || true)"
     else
         write_step "2/4" "Checking native build toolchain..."
         MISSING_TOOLS=()
@@ -199,7 +199,7 @@ done
 if [ -z "$OVMF_PATH" ] && command -v docker >/dev/null 2>&1; then
     write_info "Extracting OVMF firmware from build container..."
     mkdir -p "$WORKSPACE_ROOT/build"
-    docker run --rm -v "$WORKSPACE_ROOT:/src" syndromeos-build cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || true
+    docker run --rm -v "$WORKSPACE_ROOT:/src" syndromeos-build bash -c "cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || true"
     if [ -f "$WORKSPACE_ROOT/build/ovmf.fd" ]; then
         OVMF_PATH="$WORKSPACE_ROOT/build/ovmf.fd"
     fi

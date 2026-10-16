@@ -165,7 +165,7 @@ if ($SkipBuild) {
     docker run --rm `
         -v "${WorkspaceRoot}:/src" `
         syndromeos-build `
-        bash -c "dd if=/dev/zero of=/src/build/syndrome.img bs=1M count=64 && mkfs.fat -F 32 /src/build/syndrome.img && mmd -i /src/build/syndrome.img ::/EFI && mmd -i /src/build/syndrome.img ::/EFI/BOOT && mcopy -i /src/build/syndrome.img /src/build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI && (cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || true)"
+        bash -c "dd if=/dev/zero of=/src/build/syndrome.img bs=1M count=64 && mkfs.fat -F 32 /src/build/syndrome.img && mmd -i /src/build/syndrome.img ::/EFI && mmd -i /src/build/syndrome.img ::/EFI/BOOT && mcopy -i /src/build/syndrome.img /src/build/SyndromeOS.efi ::/EFI/BOOT/BOOTX64.EFI && (cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>/dev/null || true)"
 
     if ($LASTEXITCODE -ne 0 -or -not (Test-Path $DiskImage)) {
         throw "Failed to create bootable disk image."
@@ -196,7 +196,7 @@ if (-not $OvmfPath) {
     Write-Info "OVMF firmware not found locally. Extracting from build image..."
     try {
         if (-not (Test-Path $BuildDir)) { New-Item -ItemType Directory -Path $BuildDir | Out-Null }
-        docker run --rm -v "${WorkspaceRoot}:/src" syndromeos-build cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>&1 | Out-Null
+        docker run --rm -v "${WorkspaceRoot}:/src" syndromeos-build bash -c "cp /usr/share/ovmf/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF.fd /src/build/ovmf.fd 2>/dev/null || cp /usr/share/OVMF/OVMF_CODE_4M.fd /src/build/ovmf.fd 2>&1" | Out-Null
         $BuildOvmf = Join-Path $WorkspaceRoot "build\ovmf.fd"
         if (Test-Path $BuildOvmf) {
             $OvmfPath = $BuildOvmf

@@ -1,5 +1,7 @@
+extern "C" {
 #include <efi.h>
 #include <efilib.h>
+}
 #include "../graphics/graphics.h"
 #include "../../kernel/bootinfo.h"
 
@@ -68,10 +70,16 @@ extern "C" EFI_STATUS EFIAPI efi_main(EFI_HANDLE ImageHandle, EFI_SYSTEM_TABLE *
 
     if (!EFI_ERROR(status)) {
         status = uefi_call_wrapper((void*)SystemTable->BootServices->GetMemoryMap, 5, &memMapSize, memMap, &mapKey, &descriptorSize, &descriptorVersion);
-
-    if (!EFI_ERROR(status))
-        uefi_call_wrapper((void*)SystemTable->BootServices->ExitBootServices, 2, ImageHandle, mapKey);
-        
+        if (!EFI_ERROR(status)) {
+            status = uefi_call_wrapper((void*)SystemTable->BootServices->ExitBootServices, 2, ImageHandle, mapKey);
+            if (EFI_ERROR(status)) {
+                // Map key can change if an interrupt occurred, retry once
+                status = uefi_call_wrapper((void*)SystemTable->BootServices->GetMemoryMap, 5, &memMapSize, memMap, &mapKey, &descriptorSize, &descriptorVersion);
+                if (!EFI_ERROR(status)) {
+                    uefi_call_wrapper((void*)SystemTable->BootServices->ExitBootServices, 2, ImageHandle, mapKey);
+                }
+            }
+        }
     }
 
     // Jump into bare-metal kernel
