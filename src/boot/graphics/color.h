@@ -2,11 +2,7 @@
 #include <stdint.h>
 
 namespace Color {
-
-    // =========================================================================
     // COMPILE-TIME BIT MATH & COLOR UTILITIES
-    // =========================================================================
-
     // Construct 32-bit ARGB/XRGB (0x00RRGGBB)
     constexpr inline uint32_t rgb(uint8_t r, uint8_t g, uint8_t b) {
         return ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
@@ -35,7 +31,7 @@ namespace Color {
         return lerp(bg, fg, alpha);
     }
 
-    // Convert any color to perceived luminance grayscale
+    // Convert color to perceived luminance grayscale
     constexpr inline uint32_t to_grayscale(uint32_t c) {
         // Human eye weighting: 0.299 R + 0.587 G + 0.114 B ~= (77*R + 150*G + 29*B) / 256
         uint8_t gray = (uint8_t)((77 * get_r(c) + 150 * get_g(c) + 29 * get_b(c)) >> 8);
