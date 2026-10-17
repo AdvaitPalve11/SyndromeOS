@@ -41,7 +41,7 @@
 | :--- | :--- | :--- | :--- |
 | **Windows** | `.\scripts\run.ps1` | `.\scripts\run.ps1 -SkipBuild` | `.\scripts\run.ps1 -EnableDebug` |
 | **Linux / macOS** | `./scripts/run.sh` | `./scripts/run.sh --skip-build` | `./scripts/run.sh --debug` |
-| **Make** | `make run` | `make run-fast` | `make debug` |
+
 
 
 ## Project Structure
